@@ -1,0 +1,95 @@
+            .nav-aquarium-sub {
+                display: block;
+                }
+            
+            .nav-gaming-sub {
+                display: block;}
+            
+            .nav-bastel-sub {
+                display: block;}
+
+            section{padding:60px 0;}
+            .row > * {position: relative}
+
+            #slideshow,
+            #triops_1,
+            #triops_3{background-color:#3f9469;}
+
+            #slideshow,
+            #triops_2{background-color:#93cc80;}
+            
+            #triops img {filter: opacity(90%); transition: filter .3s ease-in-out;}        
+            #triops_1 img {filter: opacity(90%); transition: filter .3s ease-in-out;}
+            #triops_2 img {filter: opacity(90%); transition: filter .3s ease-in-out;}
+            #triops_3 img {filter: opacity(90%); transition: filter .3s ease-in-out;}
+
+            #triops img:hover,
+            #triops_1 img:hover,
+            #triops_2 img:hover,
+            #triops_3 img:hover {filter: none;}
+
+            .triops_1{background-image: url("../img/bg/bricks.png");padding-bottom: 0px;}
+            .triops_2{background-image: url("../img/bg/bricks.png");}
+            .triops_3,
+            .tagebuch,
+            .slideshow{background-image: url("../img/bg/bricks.png"); padding-top: 0px;}
+
+            .triops{background: url("../img/bg/Hintergrund_3.jpg") center top fixed no-repeat; background-size: cover; height: 100%;}
+
+            #tagebuch{background: url("../img/bg/stein_2.jpg") center top fixed no-repeat; background-size: cover; height: 100%;}
+
+            .garnelen{background: url("../img/bg/Hintergrund_2.jpg") center top fixed no-repeat; background-size: cover; height: 100%;}
+
+            #Garnele_1 img,
+            #Garnele_2 img,
+            #Garnele_3 img,
+            #Garnele_4 img,
+            #Garnele_5 img,
+            #tagebuch img {filter: opacity(90%); transition: filter .3s ease-in-out;}  
+
+            #Garnele_1 img:hover,
+            #Garnele_2 img:hover,
+            #Garnele_3 img:hover,
+            #Garnele_4 img:hover,
+            #Garnele_5 img:hover,
+            #tagebuch img:hover {filter: none;}
+
+            #Garnele_1,
+            #Garnele_3,
+            #Garnele_5 {background-color: #93cc80;}  
+
+            #Garnele_2,
+            #Garnele_4, 
+            #tagebuch{background-color: #3f9469;}
+
+            .Garnele_1,
+            .Garnele_2,
+            .Garnele_3,
+            .Garnele_4{background-image: url("../img/bg/bricks.png");padding-bottom: 0px;}
+            .Garnele_5{background-image: url("../img/bg/bricks.png")}
+            .tagebuch{background-image: url("../img/bg/bricks.png"); padding-top: 0px;}
+            #Garnelen img-fluid {width: 100% !important;}
+
+            .schnecken{background: url("../img/bg/bab.jpg") center top fixed no-repeat; background-size: cover; height: 100%;}
+
+            #schnecken img:hover {filter: none;}
+            #schnecken img {filter: opacity(90%); transition: filter .3s ease-in-out;}        
+
+            #schnecke_1 img,
+            #schnecke_2 img,
+            #schnecke_3 img {filter: opacity(90%); transition: filter .3s ease-in-out;}
+            
+            #schnecke_1 img:hover,
+            #schnecke_2 img:hover,
+            #schnecke_3 img:hover {filter: none;}
+
+            #schnecke_1,
+            #schnecke_3{background-color: #93cc80;}
+
+            #schnecke_2{background-color: #3f9469;}
+
+            .schnecke_1{background-image: url("../img/bg/bricks.png");padding-bottom: 0px;}
+            .schnecke_2{background-image: url("../img/bg/bricks.png");padding-bottom: 0px;}
+            .schnecke_3{background-image: url("../img/bg/bricks.png");}
+            
+            #schnecken img-fluid {width: 100% !important;} 

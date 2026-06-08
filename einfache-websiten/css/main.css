@@ -1,0 +1,39 @@
+            body{font-family: Montserrat, sans-serif; 
+                font-weight: 300;
+                background-color: black;
+                margin-left: auto; 
+                margin-right: auto; 
+                padding-top: 70px;}
+
+            h1, 
+            h2, 
+            h3,
+            p{font-family: 'Oleo Script Swash Caps', cursive; }
+
+            .navbar-brand-center {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            font-weight: bold;
+            color: black !important;}
+
+            .nav-link {
+                color: white !important;}
+
+            .nav-link.active {
+                font-weight: bold;}
+
+            #backtotopbutton{position: fixed; right: 40px; bottom: 40px;}
+
+           .nav-aquarium-sub .nav-link {font-size: 0.9rem;
+                padding-left: 20px;
+                opacity: 0.85;}
+
+            .nav-gaming-sub .nav-link {font-size: 0.9rem;
+                padding-left: 20px;
+                opacity: 0.85;}
+
+            .nav-bastel-sub .nav-link {font-size: 0.9rem;
+                padding-left: 20px;
+                opacity: 0.85;}
+            
