@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>Wheel Kitchen</title>
+<style>
+  body { font-family: sans-serif; background: #ebb450; color: white; text-align: center; }
+  
+  #wheelContainer { 
+    display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; margin: 20px; 
+  }
+  
+  .wheelBox { position: relative; width: 200px; }
+  
+  .pointer { 
+    position: absolute; top: -10px; left: 50%; transform: translateX(-50%); 
+    width: 0; height: 0; border-left: 10px solid transparent; 
+    border-right: 10px solid transparent; border-top: 20px solid #000000; z-index: 10; 
+  }
+  
+  canvas { 
+    border-radius: 50%; box-shadow: 0 0 10px rgba(0,0,0,0.5);
+    transition: transform 4s cubic-bezier(0.15, 0, 0.15, 1); 
+  }
+  
+  .resultBox { 
+    background: #4b4b4b; padding: 10px; margin: 5px; border-radius: 5px; 
+    min-width: 150px; display: inline-block; border: 1px solid #000000;
+  }
+  
+  button { 
+    padding: 10px 40px; font-size: 20px; cursor: pointer; 
+    background: #292929; color: white; border: 1px solid #000000; border-radius: 5px;
+  }
+</style>
+</head>
+<body>
+
+<h2>Gourmet Generator</h2>
+
+<div id="wheelContainer">
+  <div class="wheelBox"><div class="pointer"></div><canvas id="w1" width="200" height="200"></canvas></div>
+  <div class="wheelBox"><div class="pointer"></div><canvas id="w2" width="200" height="200"></canvas></div>
+  <div class="wheelBox"><div class="pointer"></div><canvas id="w3" width="200" height="200"></canvas></div>
+  <div class="wheelBox"><div class="pointer"></div><canvas id="w4" width="200" height="200"></canvas></div>
+  <div class="wheelBox"><div class="pointer"></div><canvas id="w5" width="200" height="200"></canvas></div>
+</div>
+
+<div id="results">
+  <div class="resultBox" id="r1">-</div>
+  <div class="resultBox" id="r2">-</div>
+  <div class="resultBox" id="r3">-</div>
+  <div class="resultBox" id="r4">-</div>
+  <div class="resultBox" id="r5">-</div>
+</div>
+
+<br><button onclick="spinAll()">Mahlzeit wählen!</button>
+
+<script>
+// DER PLACEHOLDER: Wird im Rad angezeigt, aber im Ergebnis ignoriert
+const EMPTY = "---"; 
+
+// DEIN ER-MODELL (Hier definierst du, was zusammengehört)
+const MEAL_SETS = [
+  { n: "Gratain V1", c1: "Nudeln", c2: "Brokolie", c3: "Schinken", c4: "Creme Fraise", c5: "Gratainkäse" },
+  { n: "Gratain V2", c1: "Kartoffel", c2: "Brokolie", c3: "Schinken", c4: "Creme Fraise", c5: "Gratainkäse" },
+  { n: "Gratain V3", c1: "Nudeln", c2: "Brokolie", c3: "Hackfleisch gebraten", c4: "Creme Fraise", c5: "Gratainkäse" },
+  { n: "Gratain V4", c1: "Kartoffel", c2: "Brokolie", c3: "Hackfleisch gebraten", c4: "Creme Fraise", c5: "Gratainkäse" },
+
+  { n: "Nudeln mit Soße", c1: "Nudeln", c2: "Tomate", c3: "Würstchen", c4: "Tomatenmark", c5: "Gratainkäse" },
+  { n: "Nudeln mit Soße", c1: "Nudeln", c2: "Tomate", c3: "Hackfleischbällchen", c4: "Tomatenmark", c5: "Gratainkäse" },
+  { n: "Nudeln mit Soße", c1: "Nudeln", c2: "Tomate", c3: "Hackfleisch gebraten", c4: "Tomatenmark", c5: "Gratainkäse" },
+
+  { n: "Gyros und Reis", c1: "Reis", c2: "Paprika", c3: "Gyros", c4: "Creme Fraise", c5: "Knoblauch" },
+  { n: "Gyros und Reis", c1: "Pommes", c2: "Paprika", c3: "Gyros", c4: "Creme Fraise", c5: "Knoblauch" },
+
+  { n: "Röstipfanne", c1: "Röstiecken", c2: EMPTY, c3: "Kassler", c4: "Creme Fraise", c5: "Gratainkäse" },
+  { n: "Röstipfanne", c1: "Röstiecken", c2: EMPTY, c3: "Hähnchengeschnetzeltes", c4: "Creme Fraise", c5: "Gratainkäse" },
+
+  { n: "Zurchini Hackfleisch Pfanne", c1: "Kartoffel", c2: "Zurchini", c3: "Hackfleisch gebraten", c4: "Bratensoße", c5: "Knoblauch" },
+  { n: "Zurchini Hackfleisch Pfanne", c1: "Reis", c2: "Zurchini", c3: "Hackfleisch gebraten", c4: "Bratensoße", c5: "Knoblauch" },
+  { n: "Zurchini Hackfleisch Pfanne", c1: "Kartoffelbrei", c2: "Zurchini", c3: "Hackfleisch gebraten", c4: "Bratensoße", c5: "Knoblauch" },
+  { n: "Zurchini Hackfleisch Pfanne", c1: "Kartoffel", c2: "Zurchini", c3: "Hackfleisch gebraten", c4: "Tomatenmark", c5: "Knoblauch" },
+  { n: "Zurchini Hackfleisch Pfanne", c1: "Reis", c2: "Zurchini", c3: "Hackfleisch gebraten", c4: "Tomatenmark", c5: "Knoblauch" },
+  { n: "Zurchini Hackfleisch Pfanne", c1: "Kartoffelbrei", c2: "Zurchini", c3: "Hackfleisch gebraten", c4: "Tomatenmark", c5: "Knoblauch" },
+
+  { n: "Paprika Hackfleisch Pfanne", c1: "Kartoffel", c2: "Paprika", c3: "Hackfleisch gebraten", c4: "Bratensoße", c5: "Knoblauch" },
+  { n: "Paprika Hackfleisch Pfanne", c1: "Reis", c2: "Paprika", c3: "Hackfleisch gebraten", c4: "Bratensoße", c5: "Knoblauch" },
+  { n: "Paprika Hackfleisch Pfanne", c1: "Kartoffelbrei", c2: "Paprika", c3: "Hackfleisch gebraten", c4: "Bratensoße", c5: "Knoblauch" },
+  { n: "Paprika Hackfleisch Pfanne", c1: "Kartoffel", c2: "Paprika", c3: "Hackfleisch gebraten", c4: "Tomatenmark", c5: "Knoblauch" },
+  { n: "Paprika Hackfleisch Pfanne", c1: "Reis", c2: "Paprika", c3: "Hackfleisch gebraten", c4: "Tomatenmark", c5: "Knoblauch" },
+  { n: "Paprika Hackfleisch Pfanne", c1: "Kartoffelbrei", c2: "Paprika", c3: "Hackfleisch gebraten", c4: "Tomatenmark", c5: "Knoblauch" },
+
+  { n: "Zurchini Hähnchen Pfanne", c1: "Kartoffel", c2: "Zurchini", c3: "Hähnchen", c4: "Bratensoße", c5: "Knoblauch" },
+  { n: "Zurchini Hähnchen Pfanne", c1: "Reis", c2: "Zurchini", c3: "Hähnchen", c4: "Bratensoße", c5: "Knoblauch" },
+  { n: "Zurchini Hähnchen Pfanne", c1: "Kartoffelbrei", c2: "Zurchini", c3: "Hähnchen", c4: "Bratensoße", c5: "Knoblauch" },
+  { n: "Zurchini Hähnchen Pfanne", c1: "Kartoffel", c2: "Zurchini", c3: "Hähnchen", c4: "Tomatenmark", c5: "Knoblauch" },
+  { n: "Zurchini Hähnchen Pfanne", c1: "Reis", c2: "Zurchini", c3: "Hähnchen", c4: "Tomatenmark", c5: "Knoblauch" },
+  { n: "Zurchini Hähnchen Pfanne", c1: "Kartoffelbrei", c2: "Zurchini", c3: "Hähnchen", c4: "Tomatenmark", c5: "Knoblauch" },
+
+  { n: "Paprika Hähnchen Pfanne", c1: "Kartoffel", c2: "Paprika", c3: "Hähnchen", c4: "Bratensoße", c5: "Knoblauch" },
+  { n: "Paprika Hähnchen Pfanne", c1: "Reis", c2: "Paprika", c3: "Hähnchen", c4: "Bratensoße", c5: "Knoblauch" },
+  { n: "Paprika Hähnchen Pfanne", c1: "Kartoffelbrei", c2: "Paprika", c3: "Hähnchen", c4: "Bratensoße", c5: "Knoblauch" },
+  { n: "Paprika Hähnchen Pfanne", c1: "Kartoffel", c2: "Paprika", c3: "Hähnchen", c4: "Tomatenmark", c5: "Knoblauch" },
+  { n: "Paprika Hähnchen Pfanne", c1: "Reis", c2: "Paprika", c3: "Hähnchen", c4: "Tomatenmark", c5: "Knoblauch" },
+  { n: "Paprika Hähnchen Pfanne", c1: "Kartoffelbrei", c2: "Paprika", c3: "Hähnchen", c4: "Tomatenmark", c5: "Knoblauch" },
+
+  { n: "Gulasch", c1: "Kloß", c2: "Rotkraut", c3: "Gulasch", c4: "Bratensoße", c5: EMPTY },
+  { n: "Gulasch", c1: "Kartoffel", c2: "Rotkraut", c3: "Gulasch", c4: "Bratensoße", c5: EMPTY },
+  { n: "Gulasch", c1: "Kartoffelbrei", c2: "Rotkraut", c3: "Gulasch", c4: "Bratensoße", c5: EMPTY },
+
+  { n: "Sauerkraut", c1: "Kartoffel", c2: "Sauerkraut", c3: "Bratwurst", c4: "Bratensoße", c5: "Röstzwiebeln" },
+  { n: "Sauerkraut", c1: "Kartoffelbrei", c2: "Sauerkraut", c3: "Bratwurst", c4: "Bratensoße", c5: "Röstzwiebeln" },
+  { n: "Sauerkraut", c1: "Kartoffel", c2: "Sauerkraut", c3: "Hackfleischbällchen", c4: "Bratensoße", c5: "Röstzwiebeln" },
+  { n: "Sauerkraut", c1: "Kartoffelbrei", c2: "Sauerkraut", c3: "Hackfleischbällchen", c4: "Bratensoße", c5: "Röstzwiebeln" },
+  { n: "Sauerkraut", c1: "Kartoffel", c2: "Sauerkraut", c3: "Hackbraten", c4: "Bratensoße", c5: "Röstzwiebeln" },
+  { n: "Sauerkraut", c1: "Kartoffelbrei", c2: "Sauerkraut", c3: "Hackbraten", c4: "Bratensoße", c5: "Röstzwiebeln" },
+
+  { n: "Bratwurst", c1: "Kartoffel", c2: "Mischgemüse", c3: "Bratwurst", c4: "Bratensoße", c5: "Röstzwiebeln" },
+  { n: "Bratwurst", c1: "Kartoffelbrei", c2: "Mischgemüse", c3: "Bratwurst", c4: "Bratensoße", c5: "Röstzwiebeln" },
+  { n: "Bratwurst", c1: "Kartoffel", c2: "Schwarzwurzel", c3: "Bratwurst", c4: "Bratensoße", c5: "Röstzwiebeln" },
+  { n: "Bratwurst", c1: "Kartoffelbrei", c2: "Schwarzwurzel", c3: "Bratwurst", c4: "Bratensoße", c5: "Röstzwiebeln" },
+
+  { n: "Fischfilet", c1: "Kartoffel", c2: "Mischgemüse", c3: "Backfisch", c4: "Kräutersoße", c5: "Petersilie" },
+  { n: "Fischfilet", c1: "Kartoffelbrei", c2: "Mischgemüse", c3: "Fischstäbchen", c4: "Kräutersoße", c5: "Petersilie" },
+  { n: "Fischfilet", c1: "Pommes", c2: "Mischgemüse", c3: "Backfisch", c4: "Kräutersoße", c5: "Petersilie" },
+  { n: "Fischfilet", c1: "Pommes", c2: "Mischgemüse", c3: "Fischstäbchen", c4: "Kräutersoße", c5: "Petersilie" },
+  { n: "Fischfilet", c1: "Kartoffel", c2: "Mischgemüse", c3: "Fischstäbchen", c4: "Kräutersoße", c5: "Petersilie" },
+  { n: "Fischfilet", c1: "Kartoffelbrei", c2: "Mischgemüse", c3: "Backfisch", c4: "Kräutersoße", c5: "Petersilie" },
+
+  { n: "Spinat und Ei", c1: "Kartoffel", c2: "Spinat", c3: "Bacon", c4: "Creme Fraise", c5: "Ei" },
+  { n: "Spinat und Ei", c1: "Kartoffelbrei", c2: "Spinat", c3: "Bacon", c4: "Creme Fraise", c5: "Ei" },
+  { n: "Spinat und Ei", c1: "Kartoffel", c2: "Spinat", c3: "Hackfleischbällchen", c4: "Creme Fraise", c5: "Ei" },
+  { n: "Spinat und Ei", c1: "Kartoffelbrei", c2: "Spinat", c3: "Hackfleischbällchen", c4: "Creme Fraise", c5: "Ei" },
+  { n: "Spinat und Ei", c1: "Kartoffel", c2: "Spinat", c3: "Hackbraten", c4: "Creme Fraise", c5: "Ei" },
+  { n: "Spinat und Ei", c1: "Kartoffelbrei", c2: "Spinat", c3: "Hackbraten", c4: "Creme Fraise", c5: "Ei" },
+
+  { n: "Senfeier mit Speck", c1: "Kartoffel", c2: EMPTY , c3: "Bacon", c4: "Senf", c5: "Ei" },
+  { n: "Senfeier mit Speck", c1: "Kartoffelbrei", c2: EMPTY , c3: "Bacon", c4: "Senf", c5: "Ei" },
+
+  { n: "Speckbohnen", c1: "Kartoffel", c2: "Grüne Bohnen", c3: "Bacon", c4: "Bratensoße", c5: "Knoblauch" },
+  { n: "Speckbohnen", c1: "Kartoffelbrei", c2: "Grüne Bohnen", c3: "Bacon", c4: "Bratensoße", c5: "Knoblauch" },
+  { n: "Speckbohnen", c1: "Kartoffel", c2: "Grüne Bohnen", c3: "Schweinelende", c4: "Bratensoße", c5: "Knoblauch" },
+  { n: "Speckbohnen", c1: "Kartoffelbrei", c2: "Grüne Bohnen", c3: "Schweinelende", c4: "Bratensoße", c5: "Knoblauch" },
+  { n: "Speckbohnen", c1: "Kartoffel", c2: "Grüne Bohnen", c3: "Hackfleischbällchen", c4: "Bratensoße", c5: "Knoblauch" },
+  { n: "Speckbohnen", c1: "Kartoffelbrei", c2: "Grüne Bohnen", c3: "Hackfleischbällchen", c4: "Bratensoße", c5: "Knoblauch" },
+  { n: "Speckbohnen", c1: "Kartoffel", c2: "Grüne Bohnen", c3: "Hackbraten", c4: "Bratensoße", c5: "Knoblauch" },
+  { n: "Speckbohnen", c1: "Kartoffelbrei", c2: "Grüne Bohnen", c3: "Hackbraten", c4: "Bratensoße", c5: "Knoblauch" },
+
+  { n: "Poree", c1: "Kartoffel", c2: "Poree Poree", c3: "Bacon", c4: "Bratensoße", c5: "Petersilie" },
+  { n: "Poree", c1: "Kartoffelbrei", c2: "Poree Poree", c3: "Bacon", c4: "Bratensoße", c5: "Petersilie" },
+  { n: "Poree", c1: "Kartoffel", c2: "Poree Poree", c3: "Schweinelende", c4: "Bratensoße", c5: "Petersilie" },
+  { n: "Poree", c1: "Kartoffelbrei", c2: "Poree Poree", c3: "Schweinelende", c4: "Bratensoße", c5: "Petersilie" },
+  { n: "Poree", c1: "Kartoffel", c2: "Poree Poree", c3: "Hackfleischbällchen", c4: "Bratensoße", c5: "Petersilie" },
+  { n: "Poree", c1: "Kartoffelbrei", c2: "Poree Poree", c3: "Hackfleischbällchen", c4: "Bratensoße", c5: "Petersilie" },
+  { n: "Poree", c1: "Kartoffel", c2: "Poree Poree", c3: "Hackbraten", c4: "Bratensoße", c5: "Petersilie" },
+  { n: "Poree", c1: "Kartoffelbrei", c2: "Poree Poree", c3: "Hackbraten", c4: "Bratensoße", c5: "Petersilie"},
+
+  { n: "Schwarzwurzel", c1: "Kartoffel", c2: "Schwarzwurzel", c3: "Bacon", c4: "Bratensoße", c5: "Knoblauch" },
+  { n: "Schwarzwurzel", c1: "Kartoffelbrei", c2: "Schwarzwurzel", c3: "Bacon", c4: "Bratensoße", c5: "Knoblauch" },
+  { n: "Schwarzwurzel", c1: "Kartoffel", c2: "Schwarzwurzel", c3: "Schweinelende", c4: "Bratensoße", c5: "Knoblauch" },
+  { n: "Schwarzwurzel", c1: "Kartoffelbrei", c2: "Schwarzwurzel", c3: "Schweinelende", c4: "Bratensoße", c5: "Knoblauch" },
+  { n: "Schwarzwurzel", c1: "Kartoffel", c2: "Schwarzwurzel", c3: "Hackfleischbällchen", c4: "Bratensoße", c5: "Knoblauch" },
+  { n: "Schwarzwurzel", c1: "Kartoffelbrei", c2: "Schwarzwurzel", c3: "Hackfleischbällchen", c4: "Bratensoße", c5: "Knoblauch" },
+  { n: "Schwarzwurzel", c1: "Kartoffel", c2: "Schwarzwurzel", c3: "Hackbraten", c4: "Bratensoße", c5: "Knoblauch" },
+  { n: "Schwarzwurzel", c1: "Kartoffelbrei", c2: "Schwarzwurzel", c3: "Hackbraten", c4: "Bratensoße", c5: "Knoblauch" },
+
+  { n: "Kohlrabi", c1: "Kartoffel", c2: "Kohlrabi", c3: "Bacon", c4: "Bratensoße", c5: "Petersilie" },
+  { n: "Kohlrabi", c1: "Kartoffelbrei", c2: "Kohlrabi", c3: "Bacon", c4: "Bratensoße", c5: "Petersilie" },
+  { n: "Kohlrabi", c1: "Kartoffel", c2: "Kohlrabi", c3: "Schweinelende", c4: "Bratensoße", c5: "Petersilie" },
+  { n: "Kohlrabi", c1: "Kartoffelbrei", c2: "Kohlrabi", c3: "Schweinelende", c4: "Bratensoße", c5: "Petersilie" },
+  { n: "Kohlrabi", c1: "Kartoffel", c2: "Kohlrabi", c3: "Hackfleischbällchen", c4: "Bratensoße", c5: "Petersilie" },
+  { n: "Kohlrabi", c1: "Kartoffelbrei", c2: "Kohlrabi", c3: "Hackfleischbällchen", c4: "Bratensoße", c5: "Petersilie" },
+  { n: "Kohlrabi", c1: "Kartoffel", c2: "Kohlrabi", c3: "Hackbraten", c4: "Bratensoße", c5: "Petersilie" },
+  { n: "Kohlrabi", c1: "Kartoffelbrei", c2: "Kohlrabi", c3: "Hackbraten", c4: "Bratensoße", c5: "Petersilie" },
+
+  { n: "Spargel", c1: "Kartoffel", c2: "Spargel", c3: "Hackbraten", c4: "Hollandaise", c5: "Petersilie" },
+  { n: "Spargel", c1: "Kartoffelbrei", c2: "Spargel", c3: "Hackbraten", c4: "Hollandaise", c5: "Petersilie" },
+  { n: "Spargel", c1: "Kartoffel", c2: "Spargel", c3: "Hackfleischbällchen", c4: "Hollandaise", c5: "Petersilie" },
+  { n: "Spargel", c1: "Kartoffelbrei", c2: "Spargel", c3: "Hackfleischbällchen", c4: "Hollandaise", c5: "Petersilie" },
+  { n: "Spargel", c1: "Kartoffel", c2: "Spargel", c3: "Schweinelende", c4: "Hollandaise", c5: "Petersilie" },
+  { n: "Spargel", c1: "Kartoffelbrei", c2: "Spargel", c3: "Schweinelende", c4: "Hollandaise", c5: "Petersilie" },
+
+  { n: "Geschnetzeltes", c1: "Reis", c2: "Paprika", c3: "Hähnchengeschnetzeltes", c4: "Creme Fraise", c5: "Knoblauch" },
+  { n: "Geschnetzeltes", c1: "Pommes", c2: "Paprika", c3: "Hähnchengeschnetzeltes", c4: "Creme Fraise", c5: "Knoblauch" },
+  { n: "Geschnetzeltes", c1: "Reis", c2: "Paprika", c3: "Chicken Wings", c4: "Creme Fraise", c5: "Knoblauch" },
+  { n: "Geschnetzeltes", c1: "Pommes", c2: "Paprika", c3: "Chicken Wings", c4: "Creme Fraise", c5: "Knoblauch" },
+  { n: "Geschnetzeltes", c1: "Reis", c2: "Möhrengemüse", c3: "Hähnchengeschnetzeltes", c4: "Creme Fraise", c5: "Knoblauch" },
+  { n: "Geschnetzeltes", c1: "Pommes", c2: "Möhrengemüse", c3: "Hähnchengeschnetzeltes", c4: "Creme Fraise", c5: "Knoblauch" },
+  { n: "Geschnetzeltes", c1: "Reis", c2: "Möhrengemüse", c3: "Chicken Wings", c4: "Creme Fraise", c5: "Knoblauch" },
+  { n: "Geschnetzeltes", c1: "Pommes", c2: "Möhrengemüse", c3: "Chicken Wings", c4: "Creme Fraise", c5: "Knoblauch" },
+  
+  { n: "Zurchinischiffchen", c1: "Pommes", c2: "Zurchini", c3: "Hackfleisch gebraten", c4: "Ketchup", c5: "Gratainkäse"},
+  { n: "Hühnerfrikase mit Reis", c1: "Reis", c2: EMPTY, c3: EMPTY, c4: "Hühnerfrikase", c5: EMPTY },
+  { n: "Butter Chicken", c1: "Reis", c2: "Tomaten passiert", c3: "Hähnchen", c4: "Curry", c5: EMPTY }
+];
+
+const wheelConfigs = [
+  { id: "w1", rid: "r1", title: "Beilage", 
+    segments: ["Nudeln", "Gnochies", "Spätzle", "Reis", "Kartoffel", "Kartoffelbrei", "Kloß", "Pommes", "Kroketten", "Röstiecken", "Pizzateig", "Lasangne", "Kartoffelpuffer", "Pfannkuchen", "Milchreis", "Hefeklöße", EMPTY]},
+  { id: "w2", rid: "r2", title: "Pflanzlich", 
+    segments: ["Mischgemüse", "Schwarzwurzel", "Grüne Bohnen", "Rote Paprika", "Möhrengemüse", "Rotkraut", "Sauerkraut", "Brokkolie", "Zurchini", "Spinat", "Spargel", "Kohlrabi", "Poree", "Tomaten passiert", EMPTY]},
+  { id: "w3", rid: "r3", title: "Tierisch", 
+    segments: ["Fischstäbchen", "Backfisch", "Lachs", "Schnitzel", "Cordon Bleu", "Falafel", "Hackfleisch gebraten", "Hackfleischbällchen", "Hackbraten", "Hähnchen", "Hähnchengeschnetzeltes", "Chicken Wings", "Gyros", "Rippchen", "Schweinelende", "Bratwurst", "Grillspieße", "Schinkenwürfel", "Bacon", "Würstchen", "Gulasch", "Kassler", "Hühnerfrikase", EMPTY]},
+  { id: "w4", rid: "r4", title: "Soße", 
+    segments: ["Senf", "Tomatenmark", "Ketchup", "Tomaten passiert", "Creme Fraise", "Bratensoße", "Kräutersoße", "Hühnerfrikase", "Maggi-Mix", "Curry", "Apfelmus", "Hollandaise", "Erdbeeren", "Heidelbeeren", EMPTY]},
+  { id: "w5", rid: "r5", title: "Zusatz", 
+    segments: ["Zwiebel", "Knoblauch", "Röstzwiebeln", "Chilli", "Petersilie", "Gratainkäse", "Vanillesoße", "Ei"]}
+];
+
+function drawWheel(config) {
+  const canvas = document.getElementById(config.id);
+  const ctx = canvas.getContext("2d");
+  const sectors = config.segments.length;
+  const arc = (Math.PI * 2) / sectors;
+
+  config.segments.forEach((text, i) => {
+    const angle = i * arc;
+    ctx.fillStyle = text === EMPTY ? "#555" : (i % 2 === 0 ? "#3498db" : "#ecf0f1");
+    ctx.beginPath();
+    ctx.moveTo(100, 100);
+    ctx.arc(100, 100, 98, angle, angle + arc);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.save();
+    ctx.translate(100, 100);
+    ctx.rotate(angle + arc / 2);
+    ctx.fillStyle = (i % 2 === 0 || text === EMPTY) ? "white" : "#2c3e50";
+    ctx.font = "bold 10px Arial";
+    ctx.fillText(text.substring(0, 12), 40, 5);
+    ctx.restore();
+  });
+}
+
+function spinAll() {
+  // 1. Random Set aus dem ER-Modell wählen
+  const selectedSet = MEAL_SETS[Math.floor(Math.random() * MEAL_SETS.length)];
+  
+  wheelConfigs.forEach((config, index) => {
+    const canvas = document.getElementById(config.id);
+    const val = selectedSet[`c${index+1}`]; // Holt c1, c2, c3...
+    
+    let targetIndex = config.segments.indexOf(val);
+    if (targetIndex === -1) targetIndex = config.segments.indexOf(EMPTY);
+
+    const segDeg = 360 / config.segments.length;
+    
+    // GESCHWINDIGKEITS-LOGIK: 
+    // Je mehr Segmente, desto mehr Extra-Umdrehungen für das "schnellere" Gefühl
+    const speedFactor = config.segments.length * 2; 
+    const extraSpins = (10 + speedFactor) * 360; 
+
+    const finalRotation = extraSpins + (360 - (targetIndex * segDeg)) - 90 - (segDeg/2);
+
+    canvas.style.transform = `rotate(${finalRotation}deg)`;
+
+    // Ergebnis-Anzeige
+    setTimeout(() => {
+      const resBox = document.getElementById(config.rid);
+      // Wenn das Ergebnis der Placeholder ist, zeigen wir nichts oder "Keine" an
+      resBox.innerText = (val === EMPTY) ? "- leer -" : val;
+      resBox.style.opacity = (val === EMPTY) ? "0.5" : "1";
+    }, 4000);
+  });
+}
+
+// Init
+wheelConfigs.forEach(drawWheel);
+</script>
+</body>
+</html>
